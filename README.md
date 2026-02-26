@@ -1,32 +1,52 @@
-# TemplatePlugin #
+# AMDSolver Plugin #
 
-**TemplatePlugin** is a **UG4-Plugin** that serves as a starting point for the creation of new plugins.
+**AMDSolver Plugin** is a **UG4 plugin** that provides a simple and rudimentary interface to use the **rocALUTION** solver library together with UG4.
 
-Copyright 2011-2016 Goethe Center for Scientific Computing, University Frankfurt
+The plugin bundles a variety of algebraic solvers, including both **direct** and **iterative** approaches:
 
-Please install/clone this repository through UG4's package manager
-[ughub](https://github.com/UG4/ughub):
+## Included solver types
 
-    ughub install TemplatePlugin
+### Direct solvers
+* LU decomposition
+* Matrix inversion
+* QR factorization
 
-    
-## Using TemplatePlugin as a base for your own plugin ##
-In order to use this plugin as a base for your own plugin, please copy 'template_plugin.cpp'
-and 'CMakeLists.txt' to your plugin folder (e.g. 'plugins/YourPlugin') and adjust
-the filname accordingly (e.g. 'template_plugin.cpp' -> 'your_plugin.cpp').
+### Iterative solvers for sparse systems
+* BiCGStab
+* Conjugate gradients
+* Algebraic multigrid (AMG)
 
-Furthermore, in 'CMakeLists.txt', change the plugin name from 'TemplatePlugin' to
-the name of your plugin and adjust the sources:
+These solvers enable efficient assembled systems within UG4 workflows.
 
-    set(pluginName	YourPlugin)
-    set(SOURCES		your_plugin.cpp)
+For detailed information about solver algorithms, configuration options, and backend capabilities, please refer to the official [rocALUTION documentation](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
-Afterwards, in 'your_plugin.cpp', rename the namespace 'TemplatePlugin' to 'YourPlugin' and
-rename the function 'InitUGPlugin_TemplatePlugin' to
+---
 
-    InitUGPlugin_YourPlugin(Registry* reg, string grp)
+## Project status
 
-You can now activate your plugin and build it along with UG4 in the same way as
-the other plugins, too. To this go to your build-directory and type:
+ **Experimental draft**
 
-    cmake -DYourPlugin=ON .
+This plugin currently provides a first draft interface.  
+APIs, naming, configuration mechanisms, and usage patterns are expected to evolve and may change significantly.
+
+Limitation: The rocalution library requires a initialization and finish (compared to MPI). since there is no workflow to finish the usage of a plugin the 
+
+
+## Installation
+Please install or clone this repository directly into the plugin folder of a ug4 installation since it is not yet included into the package manager.
+Before building just enable this with -DAMDSolver=ON 
+
+To install the libraries needed use: 
+
+on Fedora
+```bash 
+sudo dnf install rocalution rocalution-devel
+```
+if needed also
+```bash
+sudo dnf install rocm-hip hipblas hiprand rocsparse rocblas hipcub rocprim
+sudo dnf install cmake gcc-c++ git openmp-devel
+```
+
+on Ubuntu refer to the official installation guide
+https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html 

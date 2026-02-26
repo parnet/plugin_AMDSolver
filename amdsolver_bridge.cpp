@@ -36,7 +36,15 @@
 // util_algebra_dependent.h to speed up compilation time
 #include "bridge/util_domain_algebra_dependent.h"
 
-#include "amd_bicgstab.hpp"
+#include "iterative/iterative_solver.hpp"
+#include "direct_solver/inversion.hpp"
+#include "direct_solver/lu.hpp"
+#include "direct_solver/qr.hpp"
+#include "iterative/bicgstab.hpp"
+#include "preconditioner/preconditioner.hpp"
+#include "multigrid/ruge_stueben_amg.hpp"
+#include "driver.hpp"
+#include "iteration_control.hpp"
 
 using namespace std;
 using namespace ug::bridge;
@@ -127,15 +135,71 @@ static void Algebra(Registry& reg, string grp)
 	string suffix = GetAlgebraSuffix<TAlgebra>();
 	string tag = GetAlgebraTag<TAlgebra>();
 
+	// Direct solver methods
 	{
-		typedef AMD_BiCGStab<TAlgebra> T;
-		typedef IExternalSolver<TAlgebra> TBase1;
-		typedef ILinearOperatorInverse<typename TAlgebra::vector_type> TBase2;
-		string name = string("AMD_BiCGStab").append(suffix);
+		using T = AMD_LU<TAlgebra>;
+		using TBase1 = IExternalSolver<TAlgebra>;
+		using TBase2 = ILinearOperatorInverse<typename TAlgebra::vector_type> ;
+		string name = string("AMD_LU").append(suffix);
 		reg.add_class_<T,TBase1, TBase2>(name, grp)
 			.add_constructor()
+
+			.set_construct_as_smart_pointer(true);
+		reg.add_class_to_group(name, "AMD_LU", tag);
+	}	{
+		using T = AMD_Inversion<TAlgebra>;
+		using TBase1 = IExternalSolver<TAlgebra>;
+		using TBase2 = ILinearOperatorInverse<typename TAlgebra::vector_type>;
+		string name = string("AMD_Inversion").append(suffix);
+		reg.add_class_<T,TBase1, TBase2>(name, grp)
+			.add_constructor()
+
+			.set_construct_as_smart_pointer(true);
+		reg.add_class_to_group(name, "AMD_Inversion", tag);
+	}	{
+		using T = AMD_QR<TAlgebra>;
+		using TBase1 = IExternalSolver<TAlgebra>;
+		using TBase2 = ILinearOperatorInverse<typename TAlgebra::vector_type>;
+		string name = string("AMD_QR").append(suffix);
+		reg.add_class_<T,TBase1, TBase2>(name, grp)
+			.add_constructor()
+
+			.set_construct_as_smart_pointer(true);
+		reg.add_class_to_group(name, "AMD_QR", tag);
+	}
+
+	{
+		using T = AMD_BiCGStab<TAlgebra>;
+		using TBase1 = IExternalSolver<TAlgebra>;
+		using AT = AMD_IterativeLinearSolver;
+		string name = string("AMD_BiCGStab").append(suffix);
+		reg.add_class_<T, AT, TBase1>(name, grp)
+			.add_constructor()
+			.add_method("set_preconditioner", &T::set_preconditioner, "", "", "")
 			.set_construct_as_smart_pointer(true);
 		reg.add_class_to_group(name, "AMD_BiCGStab", tag);
+	}
+
+	{
+		using T = AMD_RugeStuebenAMG<TAlgebra>;
+		using TBase1 = IExternalSolver<TAlgebra>;
+		using AT = AMD_IterativeLinearSolver;
+
+		string name = string("AMD_RugeStuebenAMG").append(suffix);
+		reg.add_class_<T,TBase1, AT>(name, grp)
+			.add_constructor()
+			.add_method("set_preconditioner", &T::set_preconditioner, "", "", "")
+			.add_method("set_smoother", &T::set_smoother, "", "", "")
+			.add_method("set_coarsest_level", &T::set_coarsest_level, "", "", "")
+			.add_method("set_strength_threashold", &T::set_strength_threashold, "", "", "")
+			.add_method("set_coarsening_strategy", &T::set_coarsening_strategy, "", "", "")
+			.add_method("set_interpolation_type", &T::set_interpolation_type, "", "", "")
+			.add_method("set_interpolation_ff1_limit", &T::set_interpolation_ff1_limit, "", "", "")
+			.add_method("re_build_numeric", &T::re_build_numeric, "", "", "")
+			.add_method("set_cycle", &T::set_cycle, "", "", "")
+			.add_method("set_smooth_num", &T::set_cycle, "", "", "")
+			.set_construct_as_smart_pointer(true);
+		reg.add_class_to_group(name, "AMD_RugeStuebenAMG", tag);
 	}
 }
 
@@ -145,10 +209,55 @@ static void Algebra(Registry& reg, string grp)
  * are to be placed here when registering.
  *
  * @param reg				registry
- * @param parentGroup		group for sorting of functionality
+ * @param grp		  		group for sorting of functionality
  */
 static void Common(Registry& reg, string grp)
 {
+
+	{
+		using T = ug::AMD_IterationControl;
+		string name = string("AMD_IterationControl");
+		reg.add_class_<T>(name, grp)
+			.add_constructor()
+			.add_method("set_verbose",&T::set_verbose)
+			.add_method("init",&T::init)
+			.add_method("init_tol",&T::init_tol)
+			.add_method("init_min_iter",&T::init_min_iter)
+			.add_method("init_max_iter",&T::init_max_iter)
+			.add_method("set_residual_norm",&T::set_residual_norm)
+			.set_construct_as_smart_pointer(true);
+		// reg.add_class_to_group(name, "AMD_Solver", tag);
+	}
+	{
+		using T = AMD_Solver;
+		string name = string("AMD_Solver");
+		reg.add_class_<T>(name, grp)
+			.set_construct_as_smart_pointer(true);
+		// reg.add_class_to_group(name, "AMD_Solver", tag);
+	}
+	{
+		using T = AMD_Preconditioner;
+		string name = string("AMD_Preconditioner");
+		reg.add_class_<T>(name, grp)
+			.set_construct_as_smart_pointer(true);
+		// reg.add_class_to_group(name, "AMD_Preconditioner", tag);
+	}	{
+		using T = ug::AMD_IterativeLinearSolver;
+		using TBase = ug::AMD_Solver;
+		string name = string("AMD_IterativeLinearSolver");
+		reg.add_class_<T,TBase>(name, grp)
+			.add_method("set_conv_check",&T::set_conv_check)
+			.set_construct_as_smart_pointer(true);
+	}
+	{
+		using T = AMD_Jacobi;
+		using TB = AMD_Preconditioner;
+		string name = string("AMD_Jacobi");
+		reg.add_class_<T, TB>(name, grp)
+			.add_constructor()
+			.set_construct_as_smart_pointer(true);
+		//reg.add_class_to_group(name, "AMD_Jacobi");
+	}
 //	The code below shows how a simple function can be registered
 	// reg.add_function("TemplateSampleFunction", &TemplateSampleFunction, grp,
 	// 				 "", "", "Prints a short message");
@@ -169,9 +278,10 @@ extern "C" void
 InitUGPlugin_AMDSolver(Registry* reg, string grp)
 {
 	grp.append("AMDSolver");
-	typedef AMDSolver::Functionality Functionality;
-
-	rocalution::init_rocalution();
+	using Functionality = AMDSolver::Functionality;
+	//if (!rocalution::is_initialized_rocalution()) {
+		ug::rocalution_init();
+	//}
 
 	try{
 		RegisterCommon<Functionality>(*reg,grp);

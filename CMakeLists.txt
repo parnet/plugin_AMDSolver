@@ -33,7 +33,6 @@
 set(pluginName	AMDSolver)
 set(SOURCES
 		amdsolver_bridge.cpp
-		amd_bicgstab.cpp
 	)
 
 set(CMAKE_CXX_STANDARD 17)
