@@ -44,8 +44,8 @@ cmake_minimum_required(VERSION 3.18)
 
 project(UG_PLUGIN_${pluginName} LANGUAGES CXX)
 
-set(ROCM_DIR "/opt/rocm")
-set(CMAKE_PREFIX_PATH "${ROCM_DIR};${CMAKE_PREFIX_PATH}")
+# set(ROCM_DIR "/opt/rocm")
+# set(CMAKE_PREFIX_PATH "${ROCM_DIR};${CMAKE_PREFIX_PATH}")
 enable_language(HIP)
 
 find_package(rocalution REQUIRED CONFIG)
