@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 #include <vector>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 namespace ug{
 

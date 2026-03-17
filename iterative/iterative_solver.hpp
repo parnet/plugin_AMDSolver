@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 #include "../iteration_control.hpp"
 #include "../solver.hpp"

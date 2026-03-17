@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 #include "lib_algebra/operator/linear_solver/external_solvers/external_solvers.h"
 
