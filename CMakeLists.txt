@@ -56,7 +56,7 @@ include(${UG_ROOT_CMAKE_PATH}/ug_plugin_includes.cmake)
 
 find_package(PkgConfig REQUIRED)
 #pkg_check_modules(ROCALUTION REQUIRED rocalution)
-include_directories(${ROCALUTION_INCLUDE_DIR})
+include_directories(${rocalution_INCLUDE_DIRS})
 
 if(buildEmbeddedPlugins)
 	# add the sources to ug4's sources
