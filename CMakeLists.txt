@@ -48,21 +48,7 @@ set(ROCM_DIR "/opt/rocm")
 set(CMAKE_PREFIX_PATH "${ROCM_DIR};${CMAKE_PREFIX_PATH}")
 enable_language(HIP)
 
-# Headers
-find_path(ROCALUTION_INCLUDE_DIR
-		NAMES rocalution.hpp
-		PATHS /usr/include /usr/include/rocalution
-)
-
-# Library
-find_library(ROCALUTION_LIBRARY
-		NAMES rocalution
-		PATHS /usr/lib64 /usr/lib64/rocalution
-)
-
-if(NOT ROCALUTION_INCLUDE_DIR OR NOT ROCALUTION_LIBRARY)
-	message(FATAL_ERROR "rocALUTION not found. Please install rocalution-devel")
-endif()
+find_package(rocalution REQUIRED CONFIG)
 
 # include the definitions and dependencies for ug-plugins.
 include(${UG_ROOT_CMAKE_PATH}/ug_plugin_includes.cmake)
@@ -70,8 +56,7 @@ include(${UG_ROOT_CMAKE_PATH}/ug_plugin_includes.cmake)
 
 find_package(PkgConfig REQUIRED)
 #pkg_check_modules(ROCALUTION REQUIRED rocalution)
-include_directories(${ROCALUTION_INCLUDE_DIR})
-link_libraries(${ROCALUTION_LIBRARY})
+include_directories(${rocalution_INCLUDE_DIRS})
 
 if(buildEmbeddedPlugins)
 	# add the sources to ug4's sources
@@ -80,7 +65,6 @@ else(buildEmbeddedPlugins)
 	# create a shared library from the sources and link it against ug4.
 	add_library(${pluginName} SHARED ${SOURCES})
 	target_link_libraries (${pluginName} ug4)
-	target_link_libraries( ${pluginName}
-			${ROCALUTION_LIBRARY}
+	target_link_libraries( ${pluginName} PRIVATE rocalution
 	)
 endif(buildEmbeddedPlugins)
