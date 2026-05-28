@@ -46,24 +46,26 @@ project(UG_PLUGIN_${pluginName} LANGUAGES CXX)
 
 # set(ROCM_DIR "/opt/rocm")
 # set(CMAKE_PREFIX_PATH "${ROCM_DIR};${CMAKE_PREFIX_PATH}")
-enable_language(HIP)
+if(NOT AMDSolver)
+	enable_language(HIP)
 
-find_package(rocalution REQUIRED CONFIG)
+	find_package(rocalution REQUIRED CONFIG)
 
-# include the definitions and dependencies for ug-plugins.
-include(${UG_ROOT_CMAKE_PATH}/ug_plugin_includes.cmake)
-#include_directories(${ROCALUTION_INCLUDE_DIR})
+	# include the definitions and dependencies for ug-plugins.
+	include(${UG_ROOT_CMAKE_PATH}/ug_plugin_includes.cmake)
+	#include_directories(${ROCALUTION_INCLUDE_DIR})
 
-find_package(PkgConfig REQUIRED)
-#pkg_check_modules(ROCALUTION REQUIRED rocalution)
-include_directories(${rocalution_INCLUDE_DIRS})
+	find_package(PkgConfig REQUIRED)
+	#pkg_check_modules(ROCALUTION REQUIRED rocalution)
+	include_directories(${rocalution_INCLUDE_DIRS})
 
-if(buildEmbeddedPlugins)
-	# add the sources to ug4's sources
-	EXPORTSOURCES(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
-else(buildEmbeddedPlugins)
-	# create a shared library from the sources and link it against ug4.
-	add_library(${pluginName} SHARED ${SOURCES})
-	target_link_libraries (${pluginName} ug4)
-	target_link_libraries ( ${pluginName} rocalution)
-endif(buildEmbeddedPlugins)
+	if(buildEmbeddedPlugins)
+		# add the sources to ug4's sources
+		EXPORTSOURCES(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
+	else(buildEmbeddedPlugins)
+		# create a shared library from the sources and link it against ug4.
+		add_library(${pluginName} SHARED ${SOURCES})
+		target_link_libraries (${pluginName} ug4)
+		target_link_libraries ( ${pluginName} rocalution)
+	endif(buildEmbeddedPlugins)
+endif()
